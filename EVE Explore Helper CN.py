@@ -249,3 +249,4 @@ btn = tk.Button(root, text="确认探索", command=confirm_explore)
 btn.grid(row=3, column=0, padx=20, pady=20, sticky="ew")
 
 root.mainloop()
+# B:1R4N
