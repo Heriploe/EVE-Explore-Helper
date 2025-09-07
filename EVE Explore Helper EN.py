@@ -5,7 +5,6 @@ from tkinter import ttk
 from tkinter import messagebox
 
 ly = 9.46073047258E+15
-distance_max = 80
 
 
 def check_visited(name, list):
@@ -249,4 +248,3 @@ btn = tk.Button(root, text="Confirm Explore", command=confirm_explore)
 btn.grid(row=3, column=0, padx=20, pady=20, sticky="ew")
 
 root.mainloop()
-# B:1R4N
