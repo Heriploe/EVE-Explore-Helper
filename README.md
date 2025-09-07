@@ -1,5 +1,6 @@
 # EVE-Explore-Helper
 Search for star systems within a certain distance and display key information. You can keep track of visited star systems to avoid repeated exploration.
+
 寻找附近一定距离的星系并显示重要信息。可以记录访问过的星系来避免重复探索。
 
 Enter the current star system name in the first row, first column. In the second row, first column, enter the distance you want to search. After entering the information, click "Search Star System" and a list of matching star systems will appear on the right. Click on one of the star systems to view its related information. If the temperature index is greater than 20, it likely means the background temperature of that star system exceeds 30K. Please explore with caution. Click "Confirm Exploration" to jump to the target star system. If you need to reset the explored star systems, delete the “visited.json” file.
