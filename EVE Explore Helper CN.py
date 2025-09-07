@@ -208,12 +208,12 @@ def on_select(event):
                 visited_list = json.load(f)
         except FileNotFoundError:
             visited_list = []
-        detail_var.set("Distance: " + distance_list[index] + "\n" + "Planets: " + str(
-            get_planet_by_name(key, data)) + "\n" + "Radius: " + "{:.2f}".format(
-            get_radius_by_name(key, data)) + "\n" + "Lumin: " + "{:.4f}".format(get_luminosity_by_name(key, data))
-                       + "\n" + "Ratio: " + "{:.2f}".format(100*get_luminosity_by_name(key, data)/get_radius_by_name(key, data)**2)
-                       + "\n" + "StarGate: " + str(check_constellations(key, constellations))
-                       + "\n" + "Visited: " + str(check_visited(key, visited_list)))
+        detail_var.set("距离: " + distance_list[index] + "\n" + "行星数: " + str(
+            get_planet_by_name(key, data)) + "\n" + "最大轨道: " + "{:.2f}".format(
+            get_radius_by_name(key, data)) + "\n" + "光度: " + "{:.4f}".format(get_luminosity_by_name(key, data))
+                       + "\n" + "温度指数: " + "{:.2f}".format(100*get_luminosity_by_name(key, data)/get_radius_by_name(key, data)**2)
+                       + "\n" + "是否有星门: " + str(check_constellations(key, constellations))
+                       + "\n" + "是否访问过: " + str(check_visited(key, visited_list)))
 
 
 listbox.bind("<<ListboxSelect>>", on_select)
@@ -249,4 +249,3 @@ btn = tk.Button(root, text="确认探索", command=confirm_explore)
 btn.grid(row=3, column=0, padx=20, pady=20, sticky="ew")
 
 root.mainloop()
-# B:1R4N
