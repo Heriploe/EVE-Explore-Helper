@@ -5,6 +5,7 @@ from tkinter import ttk
 from tkinter import messagebox
 
 ly = 9.46073047258E+15
+au = 1.496E+11
 
 
 def check_visited(name, list):
@@ -39,7 +40,7 @@ def get_planet_by_name(name, data):
 def get_radius_by_name(name, data):
     for i in range(0, len(data)):
         if name == data[i]["name"]:
-            return data[i]["outermostOrbitRadius"]
+            return data[i]["outermostOrbitRadius"] / au
 
 
 def get_luminosity_by_name(name, data):
@@ -113,19 +114,18 @@ with open(file, "r", encoding="utf-8") as f:
 
 
 def check_constellations(name, data):
-    in_cconstellations = False
+    in_constellations = False
     for i in range(0, len(data)):
         for j in range(0, len(data[i])):
             if name == data[i][j]:
-                in_cconstellations = True
+                in_constellations = True
                 break
 
-    return in_cconstellations
+    return in_constellations
 
 
 distance_list = []
-
-
+planet_count_list = []
 
 show_stargate = tk.BooleanVar()
 checkbox = tk.Checkbutton(root, text="Show Stargate", variable=show_stargate)
@@ -181,7 +181,13 @@ def get_entry_data():
 
                 distance_list = distance_list + ["{:.2f}".format(distance(cord, cord_temp), 2)]
         listbox.delete(0, tk.END)
+        global planet_count_list
+        planet_count_list = []
         for item in name_list:
+            planet_count_list = planet_count_list + [get_planet_by_name(item, data)]
+        sorted_name_list = [x for x, _ in sorted(zip(name_list, planet_count_list), key=lambda pair: pair[1], reverse=True)]
+
+        for item in sorted_name_list:
             listbox.insert(tk.END, item)
     else:
         messagebox.showwarning("Warning", "Solar System Not Exist!")
@@ -210,7 +216,8 @@ def on_select(event):
         detail_var.set("Distance: " + distance_list[index] + "\n" + "Planets: " + str(
             get_planet_by_name(key, data)) + "\n" + "Radius: " + "{:.2f}".format(
             get_radius_by_name(key, data)) + "\n" + "Lumin: " + "{:.4f}".format(get_luminosity_by_name(key, data))
-                       + "\n" + "Ratio: " + "{:.2f}".format(100*get_luminosity_by_name(key, data)/get_radius_by_name(key, data)**2)
+                       + "\n" + "Ratio: " + "{:.2f}".format(
+            100 * get_luminosity_by_name(key, data) / (get_radius_by_name(key, data) ** 2 + 0.1))
                        + "\n" + "StarGate: " + str(check_constellations(key, constellations))
                        + "\n" + "Visited: " + str(check_visited(key, visited_list)))
 

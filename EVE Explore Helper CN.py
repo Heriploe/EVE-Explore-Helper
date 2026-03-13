@@ -5,7 +5,7 @@ from tkinter import ttk
 from tkinter import messagebox
 
 ly = 9.46073047258E+15
-
+au = 1.496E+11
 
 def check_visited(name, list):
     result = False
@@ -39,7 +39,7 @@ def get_planet_by_name(name, data):
 def get_radius_by_name(name, data):
     for i in range(0, len(data)):
         if name == data[i]["name"]:
-            return data[i]["outermostOrbitRadius"]
+            return data[i]["outermostOrbitRadius"]/au
 
 
 def get_luminosity_by_name(name, data):
