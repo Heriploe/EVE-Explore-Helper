@@ -123,7 +123,11 @@ class AutocompleteEntry(ttk.Combobox):
 
     def show_dropdown(self):
         try:
+            current_text = self.get()
+            cursor_pos = self.index(tk.INSERT)
             self.tk.call("ttk::combobox::Post", str(self))
+            self.focus_set()
+            self.icursor(min(cursor_pos, len(current_text)))
         except tk.TclError:
             pass
 
