@@ -99,44 +99,29 @@ def dist(a, b):
     return math.sqrt((aa[0] - bb[0]) ** 2 + (aa[1] - bb[1]) ** 2 + (aa[2] - bb[2]) ** 2)
 
 
-class AutocompleteEntry(tk.Entry):
+class AutocompleteEntry(ttk.Combobox):
     def __init__(self, options, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.options = options
         self.var = self["textvariable"] = tk.StringVar()
-        self.var.trace("w", self.on_change)
-        self.listbox = None
+        self.configure(values=(), state="normal")
+        self.bind("<KeyRelease>", self.on_change)
+        self.bind("<<ComboboxSelected>>", self.on_select)
 
-    def on_change(self, *args):
-        value = self.var.get()
+    def on_change(self, _event=None):
+        value = self.var.get().strip()
         if value == "":
-            self.hide_listbox()
+            self.configure(values=())
             return
-        matches = [item for item in self.options if item.startswith(value)]
-        if matches:
-            self.show_listbox(matches)
-        else:
-            self.hide_listbox()
-
-    def show_listbox(self, matches):
-        if self.listbox:
-            self.listbox.destroy()
-        self.listbox = tk.Listbox(width=self["width"])
-        self.listbox.bind("<<ListboxSelect>>", self.on_select)
-        for item in matches:
-            self.listbox.insert(tk.END, item)
-        self.listbox.place(x=self.winfo_x(), y=self.winfo_y() + self.winfo_height())
+        value_lower = value.lower()
+        matches = [item for item in self.options if item.lower().startswith(value_lower)]
+        self.configure(values=matches)
 
     def hide_listbox(self):
-        if self.listbox:
-            self.listbox.destroy()
-            self.listbox = None
+        self.configure(values=())
 
     def on_select(self, _event):
-        if self.listbox:
-            selection = self.listbox.get(self.listbox.curselection())
-            self.var.set(selection)
-            self.hide_listbox()
+        self.hide_listbox()
 
 
 class App:
@@ -475,3 +460,7 @@ class App:
 def run_app(default_language="zh"):
     app = App(default_language=default_language)
     app.run()
+
+
+if __name__ == '__main__':
+    run_app(default_language='zh')
