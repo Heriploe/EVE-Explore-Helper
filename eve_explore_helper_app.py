@@ -106,6 +106,7 @@ class AutocompleteEntry(ttk.Combobox):
         self.var = self["textvariable"] = tk.StringVar()
         self.configure(values=(), state="normal")
         self.bind("<KeyRelease>", self.on_change)
+        self.bind("<Return>", self.on_enter)
         self.bind("<<ComboboxSelected>>", self.on_select)
 
     def on_change(self, _event=None):
@@ -116,10 +117,20 @@ class AutocompleteEntry(ttk.Combobox):
         value_lower = value.lower()
         matches = [item for item in self.options if item.lower().startswith(value_lower)]
         self.configure(values=matches)
+
+    def on_enter(self, _event=None):
+        value = self.var.get().strip()
+        if value == "":
+            self.hide_listbox()
+            return "break"
+        value_lower = value.lower()
+        matches = [item for item in self.options if item.lower().startswith(value_lower)]
+        self.configure(values=matches)
         if matches:
-            self.after_idle(self.show_dropdown)
+            self.show_dropdown()
         else:
             self.hide_listbox()
+        return "break"
 
     def show_dropdown(self):
         try:
