@@ -116,6 +116,8 @@ class AutocompleteEntry(ttk.Combobox):
         value_lower = value.lower()
         matches = [item for item in self.options if item.lower().startswith(value_lower)]
         self.configure(values=matches)
+        if matches:
+            self.after_idle(lambda: self.event_generate("<Down>"))
 
     def hide_listbox(self):
         self.configure(values=())
@@ -134,7 +136,7 @@ class App:
 
         self.settings = self.load_settings(default_language)
         self.root = tk.Tk()
-        self.root.geometry("980x560")
+        self.root.geometry("980x500")
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
 
@@ -202,7 +204,7 @@ class App:
         self.control_frame.grid(row=0, column=0, sticky="new", padx=(0, 12))
 
         self.result_frame = ttk.LabelFrame(self.main_frame, padding=12)
-        self.result_frame.grid(row=0, column=1, rowspan=2, sticky="nsew")
+        self.result_frame.grid(row=0, column=1, sticky="nsew")
         self.result_frame.columnconfigure(0, weight=1)
         self.result_frame.rowconfigure(0, weight=1)
 
@@ -251,7 +253,7 @@ class App:
         self.btn_confirm = ttk.Button(self.control_frame, command=self.confirm_explore)
         self.btn_confirm.grid(row=13, column=0, sticky="ew", pady=(6, 0))
 
-        self.tree = ttk.Treeview(self.result_frame, columns=("name", "dc", "dt", "pc"), show="headings", height=18)
+        self.tree = ttk.Treeview(self.result_frame, columns=("name", "dc", "dt", "pc"), show="headings", height=14)
         self.tree.grid(row=0, column=0, sticky="nsew")
         self.scroll = ttk.Scrollbar(self.result_frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscroll=self.scroll.set)
