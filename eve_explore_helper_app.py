@@ -111,16 +111,28 @@ class AutocompleteEntry(ttk.Combobox):
     def on_change(self, _event=None):
         value = self.var.get().strip()
         if value == "":
-            self.configure(values=())
+            self.hide_listbox()
             return
         value_lower = value.lower()
         matches = [item for item in self.options if item.lower().startswith(value_lower)]
         self.configure(values=matches)
         if matches:
-            self.after_idle(lambda: self.event_generate("<Down>"))
+            self.after_idle(self.show_dropdown)
+        else:
+            self.hide_listbox()
+
+    def show_dropdown(self):
+        try:
+            self.tk.call("ttk::combobox::Post", str(self))
+        except tk.TclError:
+            pass
 
     def hide_listbox(self):
         self.configure(values=())
+        try:
+            self.tk.call("ttk::combobox::Unpost", str(self))
+        except tk.TclError:
+            pass
 
     def on_select(self, _event):
         self.hide_listbox()
