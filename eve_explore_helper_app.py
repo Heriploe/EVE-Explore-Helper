@@ -24,6 +24,7 @@ I18N = {
         "sort_mode": "排序方式",
         "sort_current": "与当前星系距离",
         "sort_target": "与目标星系距离",
+        "sort_detour": "绕路距离（当前+目标-直线）",
         "sort_planets": "行星个数",
         "show_stargate": "显示有星门星系",
         "show_visited": "显示已访问星系",
@@ -64,6 +65,7 @@ I18N = {
         "sort_mode": "Sort By",
         "sort_current": "Distance to Current",
         "sort_target": "Distance to Target",
+        "sort_detour": "Detour distance (current+target-direct)",
         "sort_planets": "Planet Count",
         "show_stargate": "Show Stargate Systems",
         "show_visited": "Show Visited Systems",
@@ -310,6 +312,7 @@ class App:
         self.sort_key_to_display = {
             "sort_current": self.tr("sort_current"),
             "sort_target": self.tr("sort_target"),
+            "sort_detour": self.tr("sort_detour"),
             "sort_planets": self.tr("sort_planets"),
         }
         self.display_to_sort_key = {v: k for k, v in self.sort_key_to_display.items()}
@@ -385,6 +388,12 @@ class App:
 
         current_loc = self.system_map[current_name]["location"]
         target_loc = self.system_map[target_name]["location"] if target_name else None
+        direct_distance = float("inf")
+        if target_loc:
+            direct_distance = dist(
+                [current_loc["x"], current_loc["y"], current_loc["z"]],
+                [target_loc["x"], target_loc["y"], target_loc["z"]],
+            )
 
         self.result_records = []
         for item in self.data:
@@ -409,10 +418,11 @@ class App:
                 "name": name,
                 "d_current": d_current,
                 "d_target": d_target,
+                "detour": d_current + d_target - direct_distance if target_loc else float("inf"),
                 "planets": item.get("planetCount", 0),
             })
 
-        if self.sort_key_var.get() == "sort_target" and not target_name:
+        if self.sort_key_var.get() in {"sort_target", "sort_detour"} and not target_name:
             messagebox.showinfo(self.tr("tip"), self.tr("tip_target_missing"))
 
         self.sort_records()
@@ -424,6 +434,8 @@ class App:
             self.result_records.sort(key=lambda x: x["d_current"])
         elif self.sort_key_var.get() == "sort_target":
             self.result_records.sort(key=lambda x: x["d_target"])
+        elif self.sort_key_var.get() == "sort_detour":
+            self.result_records.sort(key=lambda x: x["detour"])
         else:
             self.result_records.sort(key=lambda x: x["planets"], reverse=True)
 
