@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-project_dir = Path(__file__).resolve().parent
+project_dir = Path(globals().get("SPECPATH", ".")).resolve()
 
 datas = [
     (str(project_dir / "name_list.json"), "."),
