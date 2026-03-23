@@ -1,5 +1,6 @@
 import json
 import math
+import sys
 import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox
@@ -7,7 +8,21 @@ from tkinter import ttk
 
 LY = 9.46073047258E+15
 AU = 1.496E+11
-SETTINGS_FILE = Path("settings.json")
+
+
+def get_app_paths():
+    if getattr(sys, "frozen", False):
+        resource_dir = Path(getattr(sys, "_MEIPASS", Path(sys.executable).resolve().parent))
+        data_dir = Path(sys.executable).resolve().parent
+    else:
+        resource_dir = Path(__file__).resolve().parent
+        data_dir = resource_dir
+    return resource_dir, data_dir
+
+
+RESOURCE_DIR, DATA_DIR = get_app_paths()
+SETTINGS_FILE = DATA_DIR / "settings.json"
+VISITED_FILE = DATA_DIR / "visited.json"
 
 I18N = {
     "zh": {
@@ -15,7 +30,7 @@ I18N = {
         "control_title": "搜索与筛选",
         "result_title": "候选星系",
         "info_title": "星系详情",
-        "language": "语言",
+        "language": "语言/Language",
         "lang_zh": "中文",
         "lang_en": "English",
         "current_system": "当前星系",
@@ -58,7 +73,7 @@ I18N = {
         "control_title": "Search & Filters",
         "result_title": "Candidate Systems",
         "info_title": "System Details",
-        "language": "Language",
+        "language": "语言/Language",
         "lang_zh": "中文",
         "lang_en": "English",
         "current_system": "Current System",
@@ -190,30 +205,29 @@ class App:
 
     @staticmethod
     def load_json(path):
-        with open(path, "r", encoding="utf-8") as f:
+        with open(RESOURCE_DIR / path, "r", encoding="utf-8") as f:
             return json.load(f)
 
     @staticmethod
     def load_visited():
-        visited_path = Path("visited.json")
-        if not visited_path.exists():
-            with open(visited_path, "w", encoding="utf-8") as f:
+        if not VISITED_FILE.exists():
+            with open(VISITED_FILE, "w", encoding="utf-8") as f:
                 json.dump([], f, ensure_ascii=False, indent=2)
             return []
         try:
-            with open(visited_path, "r", encoding="utf-8") as f:
+            with open(VISITED_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 if isinstance(data, list):
                     return data
         except (json.JSONDecodeError, OSError):
             pass
-        with open(visited_path, "w", encoding="utf-8") as f:
+        with open(VISITED_FILE, "w", encoding="utf-8") as f:
             json.dump([], f, ensure_ascii=False, indent=2)
         return []
 
     @staticmethod
     def save_visited(visited):
-        with open("visited.json", "w", encoding="utf-8") as f:
+        with open(VISITED_FILE, "w", encoding="utf-8") as f:
             json.dump(visited, f, ensure_ascii=False, indent=2)
 
     def tr(self, key):
@@ -228,7 +242,7 @@ class App:
                         return data
             except (json.JSONDecodeError, OSError):
                 pass
-        return {
+        defaults = {
             "language": default_language,
             "sort_key": "sort_current",
             "distance_max": 50,
@@ -237,6 +251,9 @@ class App:
             "last_current": "",
             "last_target": "",
         }
+        with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
+            json.dump(defaults, f, ensure_ascii=False, indent=2)
+        return defaults
 
     def save_settings(self):
         self.settings.update({
