@@ -24,15 +24,17 @@ I18N = {
         "sort_mode": "排序方式",
         "sort_current": "与当前星系距离",
         "sort_target": "与目标星系距离",
-        "sort_detour": "绕路距离（当前+目标-直线）",
+        "sort_detour": "绕行距离",
         "sort_planets": "行星个数",
         "show_stargate": "显示有星门星系",
         "show_visited": "显示已访问星系",
         "btn_search": "搜索星系",
         "btn_confirm": "确认探索",
+        "btn_clear_visited": "清空访问记录",
         "col_name": "星系",
         "col_dist_current": "距当前(ly)",
         "col_dist_target": "距目标(ly)",
+        "col_detour": "绕行(ly)",
         "col_planets": "行星数",
         "detail_placeholder": "请选择一个星系查看详情。",
         "distance_current": "距离当前",
@@ -65,15 +67,17 @@ I18N = {
         "sort_mode": "Sort By",
         "sort_current": "Distance to Current",
         "sort_target": "Distance to Target",
-        "sort_detour": "Detour distance (current+target-direct)",
+        "sort_detour": "Detour Distance",
         "sort_planets": "Planet Count",
         "show_stargate": "Show Stargate Systems",
         "show_visited": "Show Visited Systems",
         "btn_search": "Search Systems",
         "btn_confirm": "Confirm Explore",
+        "btn_clear_visited": "Clear Visited",
         "col_name": "System",
         "col_dist_current": "To Current(ly)",
         "col_dist_target": "To Target(ly)",
+        "col_detour": "Detour(ly)",
         "col_planets": "Planets",
         "detail_placeholder": "Select a system to see details.",
         "distance_current": "Distance to current",
@@ -189,6 +193,29 @@ class App:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
 
+    @staticmethod
+    def load_visited():
+        visited_path = Path("visited.json")
+        if not visited_path.exists():
+            with open(visited_path, "w", encoding="utf-8") as f:
+                json.dump([], f, ensure_ascii=False, indent=2)
+            return []
+        try:
+            with open(visited_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    return data
+        except (json.JSONDecodeError, OSError):
+            pass
+        with open(visited_path, "w", encoding="utf-8") as f:
+            json.dump([], f, ensure_ascii=False, indent=2)
+        return []
+
+    @staticmethod
+    def save_visited(visited):
+        with open("visited.json", "w", encoding="utf-8") as f:
+            json.dump(visited, f, ensure_ascii=False, indent=2)
+
     def tr(self, key):
         return I18N[self.lang_var.get()][key]
 
@@ -281,8 +308,10 @@ class App:
         self.btn_search.grid(row=12, column=0, sticky="ew")
         self.btn_confirm = ttk.Button(self.control_frame, command=self.confirm_explore)
         self.btn_confirm.grid(row=13, column=0, sticky="ew", pady=(6, 0))
+        self.btn_clear_visited = ttk.Button(self.control_frame, command=self.clear_visited)
+        self.btn_clear_visited.grid(row=14, column=0, sticky="ew", pady=(6, 0))
 
-        self.tree = ttk.Treeview(self.result_frame, columns=("name", "dc", "dt", "pc"), show="headings", height=14)
+        self.tree = ttk.Treeview(self.result_frame, columns=("name", "dc", "dt", "de", "pc"), show="headings", height=14)
         self.tree.grid(row=0, column=0, sticky="nsew")
         self.scroll = ttk.Scrollbar(self.result_frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscroll=self.scroll.set)
@@ -323,14 +352,17 @@ class App:
         self.check_visited.configure(text=self.tr("show_visited"))
         self.btn_search.configure(text=self.tr("btn_search"))
         self.btn_confirm.configure(text=self.tr("btn_confirm"))
+        self.btn_clear_visited.configure(text=self.tr("btn_clear_visited"))
 
         self.tree.heading("name", text=self.tr("col_name"))
         self.tree.heading("dc", text=self.tr("col_dist_current"))
         self.tree.heading("dt", text=self.tr("col_dist_target"))
+        self.tree.heading("de", text=self.tr("col_detour"))
         self.tree.heading("pc", text=self.tr("col_planets"))
         self.tree.column("name", width=180, anchor="w")
         self.tree.column("dc", width=100, anchor="center")
         self.tree.column("dt", width=100, anchor="center")
+        self.tree.column("de", width=100, anchor="center")
         self.tree.column("pc", width=80, anchor="center")
 
         self.detail_var.set(self.tr("detail_placeholder"))
@@ -380,11 +412,10 @@ class App:
             messagebox.showwarning("Warning", self.tr("warn_distance_int"))
             return
 
-        visited = self.load_json("visited.json")
+        visited = self.load_visited()
         if current_name not in visited:
             visited.append(current_name)
-            with open("visited.json", "w", encoding="utf-8") as f:
-                json.dump(visited, f, ensure_ascii=False, indent=2)
+            self.save_visited(visited)
 
         current_loc = self.system_map[current_name]["location"]
         target_loc = self.system_map[target_name]["location"] if target_name else None
@@ -444,7 +475,8 @@ class App:
             self.tree.delete(iid)
         for rec in self.result_records:
             d_target = self.tr("dash") if rec["d_target"] == float("inf") else f"{rec['d_target']:.2f}"
-            self.tree.insert("", tk.END, iid=rec["name"], values=(rec["name"], f"{rec['d_current']:.2f}", d_target, rec["planets"]))
+            detour = self.tr("dash") if rec["detour"] == float("inf") else f"{rec['detour']:.2f}"
+            self.tree.insert("", tk.END, iid=rec["name"], values=(rec["name"], f"{rec['d_current']:.2f}", d_target, detour, rec["planets"]))
 
     def on_select(self, _event):
         selected = self.tree.selection()
@@ -455,7 +487,7 @@ class App:
         if not rec:
             return
 
-        visited = self.load_json("visited.json")
+        visited = self.load_visited()
         radius = self.get_value(name, "outermostOrbitRadius", 0) / AU
         luminosity = self.get_value(name, "luminosity", 0) / 3.828e26
         ratio = 0 if radius == 0 else 100 * luminosity / (radius ** 2)
@@ -479,11 +511,10 @@ class App:
             return
 
         selected_name = selected[0]
-        visited = self.load_json("visited.json")
+        visited = self.load_visited()
         if selected_name not in visited:
             visited.append(selected_name)
-            with open("visited.json", "w", encoding="utf-8") as f:
-                json.dump(visited, f, ensure_ascii=False, indent=2)
+            self.save_visited(visited)
 
         self.entry_current.delete(0, tk.END)
         self.entry_current.insert(0, selected_name)
@@ -493,6 +524,10 @@ class App:
     def on_close(self):
         self.save_settings()
         self.root.destroy()
+
+    def clear_visited(self):
+        self.save_visited([])
+        self.search()
 
     def run(self):
         self.root.mainloop()
